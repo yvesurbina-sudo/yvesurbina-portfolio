@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yves Urbina | Virtual Assistant</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Orbitron & Rajdhani -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <style>
+        :root {
+            --neon-cyan: #00f3ff;
+            --neon-purple: #bc13fe;
+            --neon-pink: #ff00ff;
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-bg: rgba(255, 255, 255, 0.03);
+        }
+
+        body {
+            margin: 0;
+            overflow-x: hidden;
+            background-color: #050505;
+            color: white;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        h1, h2, h3, .brand-font {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--neon-cyan);
+        }
+
+        /* Canvas needs to be fixed behind content */
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: -1;
+            background: radial-gradient(circle at center, #1a1a2e 0%, #000000 100%);
+        }
+
+        /* Glassmorphism Utilities */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .glass-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.08);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
+        }
+
+        .glass-card-purple:hover {
+            border-color: var(--neon-purple);
+            box-shadow: 0 0 20px rgba(188, 19, 254, 0.2);
+        }
+
+        .glass-card-pink:hover {
+            border-color: var(--neon-pink);
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.2);
+        }
+
+        /* Text Gradients */
+        .text-gradient {
+            background: linear-gradient(to right, #fff, var(--neon-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .text-gradient-purple {
+            background: linear-gradient(to right, var(--neon-cyan), var(--neon-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-link {
+            position: relative;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 0;
+            background-color: var(--neon-cyan);
+            transition: width 0.3s ease;
+        }
+        
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        /* Glitch Effect */
+        .glitch-wrapper {
+            position: relative;
+            animation: glitch-skew 3s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+        }
+        @keyframes glitch-skew {
+            0% { transform: skew(0deg); }
+            20% { transform: skew(0deg); }
+            22% { transform: skew(-5deg); }
+            24% { transform: skew(5deg); }
+            26% { transform: skew(0deg); }
+            100% { transform: skew(0deg); }
+        }
+        
+        /* Button Styles */
+        .btn-future {
+            background: transparent;
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .btn-future::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--neon-cyan);
+            transition: left 0.3s ease;
+            z-index: -1;
+        }
+        
+        .btn-future:hover {
+            color: black;
+        }
+        
+        .btn-future:hover::before {
+            left: 0;
+        }
+
+        /* Timeline line */
+        .timeline-line {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--neon-cyan), var(--neon-purple));
+            opacity: 0.3;
+        }
+
+        /* Marquee Animation */
+        .marquee-container {
+            overflow: hidden;
+            white-space: nowrap;
+            position: relative;
+            mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+            -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+        }
+
+        .marquee-content {
+            display: inline-flex;
+            animation: marquee 25s linear infinite;
+        }
+        
+        .marquee-content:hover {
+            animation-play-state: paused;
+        }
+        
+        /* Slow Marquee for Skills */
+        .marquee-content-slow {
+            display: inline-flex;
+            animation: marquee 40s linear infinite;
+        }
+        
+        .marquee-content-slow:hover {
+             animation-play-state: paused;
+        }
+
+        /* Reverse Marquee for Testimonials */
+        .marquee-content-reverse {
+            display: inline-flex;
+            animation: marquee-reverse 30s linear infinite;
+        }
+        
+        .marquee-content-reverse:hover {
+             animation-play-state: paused;
+        }
+
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        @keyframes marquee-reverse {
+            0% { transform: translateX(-50%); }
+            100% { transform: translateX(0); }
+        }
+
+        /* Tool Badge */
+        .tool-badge {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            min-width: 150px;
+            margin: 0 12px;
+        }
+        .tool-badge:hover {
+            background: rgba(0, 243, 255, 0.1);
+            border-color: var(--neon-cyan);
+            color: var(--neon-cyan);
+        }
+        
+        /* Testimonial Card */
+        .testimonial-card {
+            width: 400px;
+            margin: 0 16px;
+            white-space: normal;
+        }
+
+        /* 3D Roulette Styles */
+        .roulette-scene {
+            perspective: 1500px;
+            width: 100%;
+            height: 400px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: visible;
+            margin-top: 40px;
+        }
+        
+        .roulette-spinner {
+            position: relative;
+            width: 320px;
+            height: 240px;
+            transform-style: preserve-3d;
+            animation: spinRoulette 16s infinite linear;
+        }
+        
+        .roulette-spinner:hover {
+            animation-play-state: paused;
+        }
+        
+        .roulette-item {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 320px;
+            height: 240px;
+            background: rgba(20, 0, 20, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 0, 255, 0.3);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.1);
+            backface-visibility: visible;
+            transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
+        }
+
+        .roulette-item:hover {
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 40px rgba(0, 243, 255, 0.3);
+            background: rgba(30, 30, 30, 0.8);
+        }
+
+        .roulette-item:nth-child(1) { transform: rotateY(0deg) translateZ(400px); }
+        .roulette-item:nth-child(2) { transform: rotateY(90deg) translateZ(400px); }
+        .roulette-item:nth-child(3) { transform: rotateY(180deg) translateZ(400px); }
+        .roulette-item:nth-child(4) { transform: rotateY(270deg) translateZ(400px); }
+
+        @keyframes spinRoulette {
+            from { transform: rotateY(0deg); }
+            to { transform: rotateY(-360deg); }
+        }
+        
+        /* Floating Animation for Mission Log */
+        @keyframes float-vertical {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .animate-float {
+            animation: float-vertical 6s ease-in-out infinite;
+        }
+        
+        .delay-1000 { animation-delay: 1s; }
+        .delay-2000 { animation-delay: 2s; }
+
+        /* Sticky Stacking Cards */
+        .sticky-card {
+            position: sticky;
+            top: 15vh; /* Stick 15% from top of viewport */
+            margin-bottom: 10vh; /* Space for next card */
+            background: rgba(10, 10, 15, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+            transform-origin: center top;
+            transition: transform 0.5s ease, filter 0.5s ease;
+        }
+        
+        /* Ensure skill cards in marquee have fixed width */
+        .skill-card-marquee {
+            min-width: 350px;
+            margin: 0 16px;
+        }
+
+    </style>
+</head>
+<body class="text-gray-200">
+
+    <!-- 3D Background -->
+    <div id="canvas-container"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 w-full z-50 px-6 py-6">
+        <div class="max-w-7xl mx-auto glass-panel rounded-full px-8 py-4 flex justify-between items-center">
+            <div class="text-2xl font-bold brand-font tracking-widest text-white flex items-center gap-2">
+                <div class="w-3 h-3 bg-cyan-400 rounded-full shadow-[0_0_10px_#00f3ff]"></div>
+                YVES URBINA
+            </div>
+            <div class="hidden md:flex gap-8 text-xs lg:text-sm tracking-widest uppercase font-medium">
+                <a href="#expertise" class="nav-link hover:text-cyan-300 transition-colors">Expertise</a>
+                <a href="#tools" class="nav-link hover:text-cyan-300 transition-colors">Arsenal</a>
+                <a href="#works" class="nav-link hover:text-cyan-300 transition-colors">Works</a>
+                <a href="#testimonials" class="nav-link hover:text-cyan-300 transition-colors">Reviews</a>
+                <a href="#contact" class="nav-link hover:text-cyan-300 transition-colors">Contact</a>
+            </div>
+            <div class="md:hidden text-cyan-400">
+                <i class="fas fa-bars text-xl"></i>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="min-h-screen flex items-center justify-center relative px-6 pt-20">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            
+            <!-- Text Content -->
+            <div class="space-y-8 z-10 pointer-events-none">
+                <div class="inline-block pointer-events-auto">
+                    <span class="glass-panel px-4 py-1 rounded-full text-xs uppercase tracking-[0.2em] text-cyan-300 border-cyan-500/30">
+                        Status: Available for Hire
+                    </span>
+                </div>
+                
+                <h1 class="text-5xl md:text-7xl font-black leading-tight">
+                    VIRTUAL <br>
+                    <span class="text-gradient-purple glitch-wrapper inline-block">ASSISTANT</span>
+                </h1>
+                
+                <p class="text-lg md:text-xl text-gray-400 max-w-lg border-l-2 border-cyan-500/50 pl-6 leading-relaxed">
+                    Meticulous professional providing quality administrative and customer service support. 
+                    Well-versed in remote office procedures, research, and data optimization.
+                </p>
+                
+                <div class="flex flex-wrap gap-4 pt-4 pointer-events-auto">
+                    <a href="#contact" class="btn-future px-8 py-4 text-sm font-bold tracking-widest uppercase rounded-none inline-block">
+                        Initiate Contact
+                    </a>
+                    <button onclick="window.open('https://www.skype.com', '_blank')" class="glass-panel px-8 py-4 text-sm font-bold tracking-widest uppercase hover:bg-white/10 transition-colors border-white/20 text-white flex items-center gap-2">
+                        <i class="fab fa-skype"></i> Skype
+                    </button>
+                </div>
+
+                <div class="flex gap-8 pt-8 opacity-60">
+                    <div class="flex flex-col">
+                        <span class="text-2xl font-bold font-mono text-cyan-400">10+</span>
+                        <span class="text-xs uppercase tracking-widest">Tools</span>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-2xl font-bold font-mono text-purple-400">4</span>
+                        <span class="text-xs uppercase tracking-widest">Top Clients</span>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-2xl font-bold font-mono text-pink-400">100%</span>
+                        <span class="text-xs uppercase tracking-widest">Success</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty div for spacing -->
+            <div class="hidden lg:block"></div>
+        </div>
+        
+        <!-- Scroll Indicator -->
+        <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 animate-bounce glass-panel p-2 rounded-full">
+            <i class="fas fa-chevron-down text-cyan-400"></i>
+        </div>
+    </section>
+
+    <!-- Skills Matrix (Now Moving - Horizontal Marquee) -->
+    <section id="expertise" class="py-32 relative z-10 overflow-hidden">
+        <div class="max-w-7xl mx-auto px-6 mb-12">
+            <div class="flex justify-between items-end">
+                <div>
+                    <h2 class="text-4xl md:text-5xl font-bold mb-4">SKILL <span class="text-cyan-400">MATRIX</span></h2>
+                    <div class="h-1 w-24 bg-gradient-to-r from-cyan-500 to-purple-600"></div>
+                </div>
+                <p class="hidden md:block text-right text-gray-400 max-w-xs text-sm font-mono">
+                    // SCANNING CAPABILITIES...<br>
+                    // MOVEMENT DETECTED...
+                </p>
+            </div>
+        </div>
+
+        <div class="marquee-container">
+            <div class="marquee-content-slow">
+                
+                <!-- Set 1 -->
+                <!-- Admin Card -->
+                <div class="glass-card skill-card-marquee p-8 rounded-2xl relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-20">
+                        <i class="fas fa-calendar-check text-4xl text-cyan-400"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4 text-white transition-colors">Admin & Operations</h3>
+                    <ul class="text-gray-400 text-sm space-y-2 font-mono">
+                        <li>> Calendar Management</li>
+                        <li>> Inbox Optimization</li>
+                        <li>> Remote Procedures</li>
+                    </ul>
+                    <div class="mt-8 flex items-center gap-2 text-xs font-mono text-cyan-500">
+                        <span>SYS.ADMIN</span>
+                        <div class="h-[1px] w-full bg-cyan-500/30"></div>
+                    </div>
+                </div>
+
+                <!-- Creative Card -->
+                <div class="glass-card skill-card-marquee p-8 rounded-2xl relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-20">
+                        <i class="fas fa-photo-video text-4xl text-purple-400"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4 text-white transition-colors">Creative Digital</h3>
+                    <ul class="text-gray-400 text-sm space-y-2 font-mono">
+                        <li>> Social Media Mgmt</li>
+                        <li>> Content Scheduling</li>
+                        <li>> Graphic Design</li>
+                    </ul>
+                    <div class="mt-8 flex items-center gap-2 text-xs font-mono text-purple-500">
+                        <span>SYS.DESIGN</span>
+                        <div class="h-[1px] w-full bg-purple-500/30"></div>
+                    </div>
+                </div>
+
+                <!-- Research Card -->
+                <div class="glass-card skill-card-marquee p-8 rounded-2xl relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-20">
+                        <i class="fas fa-database text-4xl text-pink-400"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4 text-white transition-colors">Data & Research</h3>
+                    <ul class="text-gray-400 text-sm space-y-2 font-mono">
+                        <li>> Data Collection</li>
+                        <li>> Media Analysis</li>
+                        <li>> Lead Generation</li>
+                    </ul>
+                    <div class="mt-8 flex items-center gap-2 text-xs font-mono text-pink-500">
+                        <span>SYS.DATA</span>
+                        <div class="h-[1px] w-full bg-pink-500/30"></div>
+                    </div>
+                </div>
+
+                <!-- DUPLICATE SET FOR LOOPING -->
+                
+                <!-- Admin Card -->
+                <div class="glass-card skill-card-marquee p-8 rounded-2xl relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-20">
+                        <i class="fas fa-calendar-check text-4xl text-cyan-400"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4 text-white transition-colors">Admin & Operations</h3>
+                    <ul class="text-gray-400 text-sm space-y-2 font-mono">
+                        <li>> Calendar Management</li>
+                        <li>> Inbox Optimization</li>
+                        <li>> Remote Procedures</li>
+                    </ul>
+                    <div class="mt-8 flex items-center gap-2 text-xs font-mono text-cyan-500">
+                        <span>SYS.ADMIN</span>
+                        <div class="h-[1px] w-full bg-cyan-500/30"></div>
+                    </div>
+                </div>
+
+                <!-- Creative Card -->
+                <div class="glass-card skill-card-marquee p-8 rounded-2xl relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-20">
+                        <i class="fas fa-photo-video text-4xl text-purple-400"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4 text-white transition-colors">Creative Digital</h3>
+                    <ul class="text-gray-400 text-sm space-y-2 font-mono">
+                        <li>> Social Media Mgmt</li>
+                        <li>> Content Scheduling</li>
+                        <li>> Graphic Design</li>
+                    </ul>
+                    <div class="mt-8 flex items-center gap-2 text-xs font-mono text-purple-500">
+                        <span>SYS.DESIGN</span>
+                        <div class="h-[1px] w-full bg-purple-500/30"></div>
+                    </div>
+                </div>
+
+                <!-- Research Card -->
+                <div class="glass-card skill-card-marquee p-8 rounded-2xl relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-20">
+                        <i class="fas fa-database text-4xl text-pink-400"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4 text-white transition-colors">Data & Research</h3>
+                    <ul class="text-gray-400 text-sm space-y-2 font-mono">
+                        <li>> Data Collection</li>
+                        <li>> Media Analysis</li>
+                        <li>> Lead Generation</li>
+                    </ul>
+                    <div class="mt-8 flex items-center gap-2 text-xs font-mono text-pink-500">
+                        <span>SYS.DATA</span>
+                        <div class="h-[1px] w-full bg-pink-500/30"></div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </section>
+
+    <!-- Tools & Arsenal Section (Moving Marquee) -->
+    <section id="tools" class="py-20 relative z-10 overflow-hidden">
+        <div class="max-w-7xl mx-auto px-6 mb-12">
+            <h2 class="text-3xl md:text-4xl font-bold mb-2">TECH <span class="text-purple-400">ARSENAL</span></h2>
+            <div class="h-1 w-24 bg-purple-600"></div>
+        </div>
+        
+        <div class="marquee-container">
+            <div class="marquee-content">
+                <div class="tool-badge p-4 rounded-xl text-center cursor-default"><i class="fab fa-google text-3xl mb-2"></i><div class="text-sm font-bold tracking-widest">G-SUITE</div></div>
+                <div class="tool-badge p-4 rounded-xl text-center cursor-default"><i class="fab fa-microsoft text-3xl mb-2"></i><div class="text-sm font-bold tracking-widest">MS OFFICE</div></div>
+                <div class="tool-badge p-4 rounded-xl text-center cursor-default"><i class="fas fa-palette text-3xl mb-2"></i><div class="text-sm font-bold tracking-widest">CANVA</div></div>
+                <div class="tool-badge p-4 rounded-xl text-center cursor-default"><i class="fas fa-file-invoice-dollar text-3xl mb-2"></i><div class="text-sm font-bold tracking-widest">QUICKBOOKS</div></div>
+                <div class="tool-badge p-4 rounded-xl text-center cursor-default"><i class="fab fa-slack text-3xl mb-2"></i><div class="text-sm font-bold tracking-widest">SLACK</div></div>
+                <div class="tool-badge p-4 rounded-xl text-center cursor-default"><i class="fas fa-film text-3xl mb-2"></i><div class="text-sm font-bold tracking-widest">CAPCUT</div></div>
+                <div class="tool-badge p-4 rounded-xl text-center cursor-default"><i class="fab fa-wix text-3xl mb-2"></i><div class="text-sm font-bold tracking-widest">WIX</div></div>
+                <div class="tool-badge p-4 rounded-xl text-center cursor-default"><i class="fas fa-check-circle text-3xl mb-2"></i><div class="text-sm font-bold tracking-widest">ASANA</div></div>
+                <div class="tool-badge p-4 rounded-xl text-center cursor-default"><i class="fab fa-trello text-3xl mb-2"></i><div class="text-sm font-bold tracking-widest">TRELLO</div></div>
+                
+                <!-- Duplicate for Loop -->
+                <div class="tool-badge p-4 rounded-xl text-center cursor-default"><i class="fab fa-google text-3xl mb-2"></i><div class="text-sm font-bold tracking-widest">G-SUITE</div></div>
+                <div class="tool-badge p-4 rounded-xl text-center cursor-default"><i class="fab fa-microsoft text-3xl mb-2"></i><div class="text-sm font-bold tracking-widest">MS OFFICE</div></div>
+                <div class="tool-badge p-4 rounded-xl text-center cursor-default"><i class="fas fa-palette text-3xl mb-2"></i><div class="text-sm font-bold tracking-widest">CANVA</div></div>
+                <div class="tool-badge p-4 rounded-xl text-center cursor-default"><i class="fas fa-file-invoice-dollar text-3xl mb-2"></i><div class="text-sm font-bold tracking-widest">QUICKBOOKS</div></div>
+                <div class="tool-badge p-4 rounded-xl text-center cursor-default"><i class="fab fa-slack text-3xl mb-2"></i><div class="text-sm font-bold tracking-widest">SLACK</div></div>
+                <div class="tool-badge p-4 rounded-xl text-center cursor-default"><i class="fas fa-film text-3xl mb-2"></i><div class="text-sm font-bold tracking-widest">CAPCUT</div></div>
+                <div class="tool-badge p-4 rounded-xl text-center cursor-default"><i class="fab fa-wix text-3xl mb-2"></i><div class="text-sm font-bold tracking-widest">WIX</div></div>
+                <div class="tool-badge p-4 rounded-xl text-center cursor-default"><i class="fas fa-check-circle text-3xl mb-2"></i><div class="text-sm font-bold tracking-widest">ASANA</div></div>
+                <div class="tool-badge p-4 rounded-xl text-center cursor-default"><i class="fab fa-trello text-3xl mb-2"></i><div class="text-sm font-bold tracking-widest">TRELLO</div></div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Testimonials Section -->
+    <section id="testimonials" class="py-20 relative z-10 overflow-hidden border-t border-white/5 bg-black/20">
+        <div class="max-w-7xl mx-auto px-6 mb-12 text-right">
+            <h2 class="text-3xl md:text-4xl font-bold mb-2">CLIENT <span class="text-cyan-400">TRANSMISSIONS</span></h2>
+            <div class="h-1 w-24 bg-cyan-600 ml-auto"></div>
+        </div>
+        
+        <div class="marquee-container">
+            <div class="marquee-content-reverse">
+                <div class="glass-card testimonial-card p-6 rounded-xl border-l-4 border-l-green-400">
+                    <div class="flex items-center gap-4 mb-4"><div class="bg-green-500/20 p-3 rounded-full text-green-400"><i class="fas fa-user-tie"></i></div><div><h4 class="font-bold text-white">India</h4><p class="text-xs text-gray-400">Business Coach</p></div></div>
+                    <p class="text-gray-300 text-sm italic">"Yves provided exceptional admin support and flawlessly handled my scheduling. A true asset to my coaching operations."</p>
+                </div>
+                <div class="glass-card testimonial-card p-6 rounded-xl border-l-4 border-l-pink-400">
+                    <div class="flex items-center gap-4 mb-4"><div class="bg-pink-500/20 p-3 rounded-full text-pink-400"><i class="fas fa-heart"></i></div><div><h4 class="font-bold text-white">Lisa McFarland</h4><p class="text-xs text-gray-400">Relationship Coach</p></div></div>
+                    <p class="text-gray-300 text-sm italic">"The calendar and email management provided was top-tier. Yves keeps everything organized so I can focus on my clients."</p>
+                </div>
+                <div class="glass-card testimonial-card p-6 rounded-xl border-l-4 border-l-blue-400">
+                    <div class="flex items-center gap-4 mb-4"><div class="bg-blue-500/20 p-3 rounded-full text-blue-400"><i class="fas fa-home"></i></div><div><h4 class="font-bold text-white">Vikram Deol</h4><p class="text-xs text-gray-400">Real Estate Coach</p></div></div>
+                    <p class="text-gray-300 text-sm italic">"Outstanding lead generation and CRM management. My sales process has never been smoother thanks to Yves's dedication."</p>
+                </div>
+                <div class="glass-card testimonial-card p-6 rounded-xl border-l-4 border-l-orange-400">
+                    <div class="flex items-center gap-4 mb-4"><div class="bg-orange-500/20 p-3 rounded-full text-orange-400"><i class="fas fa-coffee"></i></div><div><h4 class="font-bold text-white">Coffee House</h4><p class="text-xs text-gray-400">Brand Identity</p></div></div>
+                    <p class="text-gray-300 text-sm italic">"The creative vision for our logo and social media posts was exactly what we needed. Highly recommended for creative tasks!"</p>
+                </div>
+                <!-- Duplicates -->
+                <div class="glass-card testimonial-card p-6 rounded-xl border-l-4 border-l-green-400"><div class="flex items-center gap-4 mb-4"><div class="bg-green-500/20 p-3 rounded-full text-green-400"><i class="fas fa-user-tie"></i></div><div><h4 class="font-bold text-white">India</h4><p class="text-xs text-gray-400">Business Coach</p></div></div><p class="text-gray-300 text-sm italic">"Yves provided exceptional admin support and flawlessly handled my scheduling. A true asset to my coaching operations."</p></div>
+                <div class="glass-card testimonial-card p-6 rounded-xl border-l-4 border-l-pink-400"><div class="flex items-center gap-4 mb-4"><div class="bg-pink-500/20 p-3 rounded-full text-pink-400"><i class="fas fa-heart"></i></div><div><h4 class="font-bold text-white">Lisa McFarland</h4><p class="text-xs text-gray-400">Relationship Coach</p></div></div><p class="text-gray-300 text-sm italic">"The calendar and email management provided was top-tier. Yves keeps everything organized so I can focus on my clients."</p></div>
+                <div class="glass-card testimonial-card p-6 rounded-xl border-l-4 border-l-blue-400"><div class="flex items-center gap-4 mb-4"><div class="bg-blue-500/20 p-3 rounded-full text-blue-400"><i class="fas fa-home"></i></div><div><h4 class="font-bold text-white">Vikram Deol</h4><p class="text-xs text-gray-400">Real Estate Coach</p></div></div><p class="text-gray-300 text-sm italic">"Outstanding lead generation and CRM management. My sales process has never been smoother thanks to Yves's dedication."</p></div>
+                <div class="glass-card testimonial-card p-6 rounded-xl border-l-4 border-l-orange-400"><div class="flex items-center gap-4 mb-4"><div class="bg-orange-500/20 p-3 rounded-full text-orange-400"><i class="fas fa-coffee"></i></div><div><h4 class="font-bold text-white">Coffee House</h4><p class="text-xs text-gray-400">Brand Identity</p></div></div><p class="text-gray-300 text-sm italic">"The creative vision for our logo and social media posts was exactly what we needed. Highly recommended for creative tasks!"</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Certificates Section (3D Roulette) -->
+    <section id="credentials" class="py-20 relative z-10 overflow-hidden">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="mb-4 text-center">
+                <h2 class="text-3xl md:text-4xl font-bold mb-2">CREDENTIAL <span class="text-pink-400">ROULETTE</span></h2>
+                <div class="h-1 w-24 bg-pink-600 mx-auto"></div>
+                <p class="text-xs text-gray-500 mt-4 font-mono uppercase tracking-widest">[ Hover to Inspect ]</p>
+            </div>
+            <div class="roulette-scene">
+                <div class="roulette-spinner">
+                    <a href="https://drive.google.com/file/d/14raJEqNBdJn-CYt4N_WikxSoC1YHZZEO/view?usp=drive_link" target="_blank" class="roulette-item group">
+                        <div class="bg-pink-500/20 p-3 rounded-full text-pink-400 group-hover:text-cyan-400 group-hover:bg-cyan-500/20 transition-all mb-4"><i class="fas fa-certificate text-2xl"></i></div>
+                        <h4 class="text-xl font-bold text-white group-hover:text-cyan-300 leading-tight mb-2">Graphic Design</h4><p class="text-sm text-gray-400 mb-1">With Canva</p><div class="mt-auto text-xs font-mono text-pink-400 group-hover:text-cyan-400">> VERIFIED_LINK</div>
+                    </a>
+                    <a href="https://drive.google.com/file/d/1GZa9OkIKr6eFZK94ucFPYvyw69LFLajS/view?usp=drive_link" target="_blank" class="roulette-item group">
+                        <div class="bg-pink-500/20 p-3 rounded-full text-pink-400 group-hover:text-cyan-400 group-hover:bg-cyan-500/20 transition-all mb-4"><i class="fas fa-rocket text-2xl"></i></div>
+                        <h4 class="text-xl font-bold text-white group-hover:text-cyan-300 leading-tight mb-2">Lead Gen Pages</h4><p class="text-sm text-gray-400 mb-1">Landing Page Building</p><div class="mt-auto text-xs font-mono text-pink-400 group-hover:text-cyan-400">> VERIFIED_LINK</div>
+                    </a>
+                    <a href="https://drive.google.com/file/d/1l9QAhNaLRzlPyL1DvAevUVdUSS3g-61U/view?usp=drive_link" target="_blank" class="roulette-item group">
+                        <div class="bg-pink-500/20 p-3 rounded-full text-pink-400 group-hover:text-cyan-400 group-hover:bg-cyan-500/20 transition-all mb-4"><i class="fas fa-user-astronaut text-2xl"></i></div>
+                        <h4 class="text-xl font-bold text-white group-hover:text-cyan-300 leading-tight mb-2">Virtual Assistant</h4><p class="text-sm text-gray-400 mb-1">Professional Training</p><div class="mt-auto text-xs font-mono text-pink-400 group-hover:text-cyan-400">> VERIFIED_LINK</div>
+                    </a>
+                    <a href="https://drive.google.com/file/d/1FlRvC3coE4nVdcV636dECJS2dKXXpCq3/view?usp=drive_link" target="_blank" class="roulette-item group">
+                        <div class="bg-pink-500/20 p-3 rounded-full text-pink-400 group-hover:text-cyan-400 group-hover:bg-cyan-500/20 transition-all mb-4"><i class="fas fa-file-invoice-dollar text-2xl"></i></div>
+                        <h4 class="text-xl font-bold text-white group-hover:text-cyan-300 leading-tight mb-2">QuickBooks</h4><p class="text-sm text-gray-400 mb-1">Mastering Online Finance</p><div class="mt-auto text-xs font-mono text-pink-400 group-hover:text-cyan-400">> VERIFIED_LINK</div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Mission Log / Experience (Now Moving - Floating Animation) -->
+    <section id="experience" class="py-20 border-t border-white/5 bg-black/40 backdrop-blur-sm relative z-10">
+        <div class="max-w-5xl mx-auto px-6">
+            <h2 class="text-4xl font-bold mb-12 text-center">MISSION <span class="text-purple-400">LOG</span></h2>
+            
+            <div class="relative pl-8 md:pl-0">
+                <!-- Timeline visual for desktop -->
+                <div class="hidden md:block timeline-line left-1/2 transform -translate-x-1/2"></div>
+
+                <!-- Item 1 (Floating) -->
+                <div class="relative mb-12 md:grid md:grid-cols-2 md:gap-12 items-center animate-float">
+                    <div class="hidden md:block text-right">
+                        <div class="text-2xl font-bold text-cyan-400">Innodata</div>
+                        <div class="text-sm text-gray-500">Oct 2021 - Present</div>
+                    </div>
+                    <div class="md:hidden mb-2">
+                        <span class="text-cyan-400 font-bold">Innodata</span> <span class="text-gray-500 text-sm">| Oct 2021 - Present</span>
+                    </div>
+                    
+                    <!-- Dot -->
+                    <div class="absolute left-[-37px] md:left-1/2 md:transform md:-translate-x-1/2 w-4 h-4 bg-cyan-400 rounded-full shadow-[0_0_10px_#00f3ff]"></div>
+
+                    <div class="glass-card p-6 rounded-xl border-l-4 border-l-cyan-400">
+                        <h3 class="text-xl font-bold mb-2">Media Research Analyst</h3>
+                        <p class="text-gray-400 text-sm">Gathering information from global media agencies. Conducting detailed research, data scraping, and analyzing findings to support content creation strategies.</p>
+                    </div>
+                </div>
+
+                <!-- Item 2 (Floating with delay) -->
+                <div class="relative mb-12 md:grid md:grid-cols-2 md:gap-12 items-center animate-float delay-1000">
+                    <!-- Flip order for alternating effect on desktop -->
+                    <div class="order-2 md:hidden mb-2">
+                         <span class="text-purple-400 font-bold">Sutherland</span> <span class="text-gray-500 text-sm">| Mar 2021 - Nov 2021</span>
+                    </div>
+                    
+                    <div class="glass-card p-6 rounded-xl border-l-4 border-l-purple-400 md:text-right md:border-l-0 md:border-r-4 md:border-r-purple-400 order-1">
+                        <h3 class="text-xl font-bold mb-2">Customer Service Rep</h3>
+                        <p class="text-gray-400 text-sm">Handled travel account inquiries via phone/email/chat. Processed bookings and resolved complex customer issues with high satisfaction rates.</p>
+                    </div>
+                    
+                    <!-- Dot -->
+                    <div class="absolute left-[-37px] md:left-1/2 md:transform md:-translate-x-1/2 w-4 h-4 bg-purple-400 rounded-full shadow-[0_0_10px_#bc13fe]"></div>
+                    
+                    <div class="hidden md:block text-left order-2">
+                        <div class="text-2xl font-bold text-purple-400">Sutherland</div>
+                        <div class="text-sm text-gray-500">Mar 2021 - Nov 2021</div>
+                    </div>
+                </div>
+
+                <!-- Item 3 (Floating with delay) -->
+                <div class="relative mb-12 md:grid md:grid-cols-2 md:gap-12 items-center animate-float delay-2000">
+                    <div class="hidden md:block text-right">
+                        <div class="text-2xl font-bold text-pink-400">Via Marine Corp</div>
+                        <div class="text-sm text-gray-500">Feb 2018 - Feb 2019</div>
+                    </div>
+                    <div class="md:hidden mb-2">
+                        <span class="text-pink-400 font-bold">Via Marine Corp</span> <span class="text-gray-500 text-sm">| 2018 - 2019</span>
+                    </div>
+                    
+                    <!-- Dot -->
+                    <div class="absolute left-[-37px] md:left-1/2 md:transform md:-translate-x-1/2 w-4 h-4 bg-pink-400 rounded-full shadow-[0_0_10px_#ff00ff]"></div>
+
+                    <div class="glass-card p-6 rounded-xl border-l-4 border-l-pink-400">
+                        <h3 class="text-xl font-bold mb-2">Deck Cadet / Admin</h3>
+                        <p class="text-gray-400 text-sm">Assisted with office administration, document organization, data entry, and coordinating with port authorities for vessel clearance.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sample Works / Project Database (STICKY STACKING SECTION) -->
+    <section id="works" class="relative z-10">
+        <div class="max-w-7xl mx-auto px-6 pt-20 pb-12">
+            <div class="flex justify-between items-end">
+                <div>
+                    <h2 class="text-3xl md:text-4xl font-bold mb-2">PROJECT <span class="text-green-400">DATABASE</span></h2>
+                    <div class="h-1 w-24 bg-green-500"></div>
+                </div>
+                <div class="text-xs font-mono text-green-400 border border-green-500/30 px-2 py-1 rounded">
+                    ACCESS GRANTED
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sticky Wrapper -->
+        <div class="max-w-5xl mx-auto px-6 pb-32">
+            
+            <!-- Work 1 -->
+            <div class="sticky-card rounded-3xl p-8 md:p-12 border-l-8 border-l-green-400 flex flex-col md:flex-row gap-8 items-center" style="top: 120px;">
+                <div class="flex-1">
+                    <div class="text-sm text-green-400 font-mono mb-2">PROJECT_ID: 001</div>
+                    <h3 class="text-3xl font-bold text-white mb-4">Client: India</h3>
+                    <p class="text-xl text-gray-300 mb-6">Business Coach Administration</p>
+                    <p class="text-gray-400 leading-relaxed mb-8">Comprehensive administrative support, scheduling management, and operational workflow optimization for a high-level business coaching firm.</p>
+                    <a href="https://drive.google.com/drive/folders/1GRoJ7EGAWxSdxWaMgsyIhmUcYy8j7Lr" target="_blank" class="inline-block bg-green-500/10 text-green-400 border border-green-500/50 px-6 py-3 rounded-full hover:bg-green-500 hover:text-black transition-all font-bold tracking-wider">
+                        ACCESS DATABASE <i class="fas fa-external-link-alt ml-2"></i>
+                    </a>
+                </div>
+                <div class="w-full md:w-1/3 aspect-square bg-gradient-to-br from-gray-800 to-black rounded-2xl flex items-center justify-center border border-white/10">
+                     <i class="fas fa-briefcase text-6xl text-green-400/50"></i>
+                </div>
+            </div>
+
+            <!-- Work 2 -->
+            <div class="sticky-card rounded-3xl p-8 md:p-12 border-l-8 border-l-pink-400 flex flex-col md:flex-row gap-8 items-center" style="top: 160px;">
+                <div class="flex-1">
+                    <div class="text-sm text-pink-400 font-mono mb-2">PROJECT_ID: 002</div>
+                    <h3 class="text-3xl font-bold text-white mb-4">Lisa McFarland</h3>
+                    <p class="text-xl text-gray-300 mb-6">Relationship Coach Support</p>
+                    <p class="text-gray-400 leading-relaxed mb-8">Managed complex calendars and email communications. Streamlined client onboarding processes to ensure a seamless experience.</p>
+                    <a href="https://drive.google.com/drive/folders/1b_ZUJW0HREjPJNiB8Ra_g9ant8uFn7Fu?usp=drive_link" target="_blank" class="inline-block bg-pink-500/10 text-pink-400 border border-pink-500/50 px-6 py-3 rounded-full hover:bg-pink-500 hover:text-black transition-all font-bold tracking-wider">
+                        ACCESS DATABASE <i class="fas fa-external-link-alt ml-2"></i>
+                    </a>
+                </div>
+                <div class="w-full md:w-1/3 aspect-square bg-gradient-to-br from-gray-800 to-black rounded-2xl flex items-center justify-center border border-white/10">
+                     <i class="fas fa-heart text-6xl text-pink-400/50"></i>
+                </div>
+            </div>
+
+            <!-- Work 3 -->
+            <div class="sticky-card rounded-3xl p-8 md:p-12 border-l-8 border-l-blue-400 flex flex-col md:flex-row gap-8 items-center" style="top: 200px;">
+                <div class="flex-1">
+                    <div class="text-sm text-blue-400 font-mono mb-2">PROJECT_ID: 003</div>
+                    <h3 class="text-3xl font-bold text-white mb-4">Vikram Deol</h3>
+                    <p class="text-xl text-gray-300 mb-6">Real Estate Lead Gen & CRM</p>
+                    <p class="text-gray-400 leading-relaxed mb-8">Executed lead generation strategies and maintained CRM data integrity. Focused on high-conversion pipelines and data tracking.</p>
+                    <a href="https://drive.google.com/drive/folders/1jNZorgZowKVIYmkk7_iW42P7N8qiQWPj?usp=drive_link" target="_blank" class="inline-block bg-blue-500/10 text-blue-400 border border-blue-500/50 px-6 py-3 rounded-full hover:bg-blue-500 hover:text-black transition-all font-bold tracking-wider">
+                        ACCESS DATABASE <i class="fas fa-external-link-alt ml-2"></i>
+                    </a>
+                </div>
+                <div class="w-full md:w-1/3 aspect-square bg-gradient-to-br from-gray-800 to-black rounded-2xl flex items-center justify-center border border-white/10">
+                     <i class="fas fa-home text-6xl text-blue-400/50"></i>
+                </div>
+            </div>
+
+            <!-- Work 4 -->
+            <div class="sticky-card rounded-3xl p-8 md:p-12 border-l-8 border-l-orange-400 flex flex-col md:flex-row gap-8 items-center" style="top: 240px;">
+                <div class="flex-1">
+                    <div class="text-sm text-orange-400 font-mono mb-2">PROJECT_ID: 004</div>
+                    <h3 class="text-3xl font-bold text-white mb-4">Coffee House</h3>
+                    <p class="text-xl text-gray-300 mb-6">Brand Identity & Social Media</p>
+                    <p class="text-gray-400 leading-relaxed mb-8">Designed brand logo and curated social media posts to establish a strong visual identity and engage local customers.</p>
+                    <a href="https://drive.google.com/drive/folders/1rFEnJE4_DlJCbTD7JjolCsk2OcItuDlR?usp=drive_link" target="_blank" class="inline-block bg-orange-500/10 text-orange-400 border border-orange-500/50 px-6 py-3 rounded-full hover:bg-orange-500 hover:text-black transition-all font-bold tracking-wider">
+                        ACCESS DATABASE <i class="fas fa-external-link-alt ml-2"></i>
+                    </a>
+                </div>
+                <div class="w-full md:w-1/3 aspect-square bg-gradient-to-br from-gray-800 to-black rounded-2xl flex items-center justify-center border border-white/10">
+                     <i class="fas fa-coffee text-6xl text-orange-400/50"></i>
+                </div>
+            </div>
+            
+            <!-- Work 5 -->
+            <div class="sticky-card rounded-3xl p-8 md:p-12 border-l-8 border-l-red-400 flex flex-col md:flex-row gap-8 items-center" style="top: 280px;">
+                <div class="flex-1">
+                    <div class="text-sm text-red-400 font-mono mb-2">PROJECT_ID: 005</div>
+                    <h3 class="text-3xl font-bold text-white mb-4">Video Editing</h3>
+                    <p class="text-xl text-gray-300 mb-6">Content Creation</p>
+                    <p class="text-gray-400 leading-relaxed mb-8">Professional video editing using CapCut and Canva to create engaging short-form content for social media platforms.</p>
+                    <a href="https://drive.google.com/drive/folders/1tlkKRzTnO8KkITbRYmikKlT5uA7b_Wz4?usp=drive_link" target="_blank" class="inline-block bg-red-500/10 text-red-400 border border-red-500/50 px-6 py-3 rounded-full hover:bg-red-500 hover:text-black transition-all font-bold tracking-wider">
+                        ACCESS DATABASE <i class="fas fa-external-link-alt ml-2"></i>
+                    </a>
+                </div>
+                <div class="w-full md:w-1/3 aspect-square bg-gradient-to-br from-gray-800 to-black rounded-2xl flex items-center justify-center border border-white/10">
+                     <i class="fas fa-video text-6xl text-red-400/50"></i>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Footer / Contact -->
+    <footer id="contact" class="py-12 border-t border-white/10 bg-black relative z-10">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
+            <div class="text-left">
+                <div class="text-2xl font-bold brand-font tracking-widest text-white mb-2">YVES URBINA</div>
+                <p class="text-sm text-gray-500 font-mono">Legazpi City, Philippines, 4500</p>
+            </div>
+            
+            <div class="glass-panel px-8 py-6 rounded-xl flex flex-col md:flex-row gap-8 text-center md:text-left">
+                <div>
+                    <div class="text-xs text-cyan-400 uppercase tracking-widest mb-1">Email Uplink</div>
+                    <a href="mailto:yvesurbina@gmail.com" class="text-white hover:text-cyan-300 transition-colors">yvesurbina@gmail.com</a>
+                </div>
+                <div>
+                    <div class="text-xs text-purple-400 uppercase tracking-widest mb-1">Voice Comms</div>
+                    <div class="text-white">+639 278 124 768</div>
+                </div>
+                <div>
+                    <div class="text-xs text-pink-400 uppercase tracking-widest mb-1">Skype ID</div>
+                    <div class="text-white">live:yvesurbina</div>
+                </div>
+            </div>
+        </div>
+        <div class="text-center mt-12 text-gray-600 text-xs font-mono">
+            © 2025 SYSTEM INTERFACE. DESIGNED FOR YVES URBINA.
+        </div>
+    </footer>
+
+    <!-- THREE.JS LOGIC -->
+    <script>
+        // --- SCENE SETUP ---
+        const scene = new THREE.Scene();
+        // Fog for depth
+        scene.fog = new THREE.FogExp2(0x050505, 0.002);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        // --- OBJECTS ---
+        
+        // 1. Main Geodesic Sphere (Wireframe)
+        const geometry = new THREE.IcosahedronGeometry(10, 2);
+        const material = new THREE.MeshBasicMaterial({ 
+            color: 0x00f3ff, 
+            wireframe: true,
+            transparent: true,
+            opacity: 0.2
+        });
+        const sphere = new THREE.Mesh(geometry, material);
+        scene.add(sphere);
+
+        // 2. Inner Core Sphere
+        const coreGeo = new THREE.IcosahedronGeometry(4, 4);
+        const coreMat = new THREE.MeshBasicMaterial({
+            color: 0xbc13fe,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.4
+        });
+        const core = new THREE.Mesh(coreGeo, coreMat);
+        scene.add(core);
+
+        // 3. Particles System
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCount = 2000;
+        const posArray = new Float32Array(particlesCount * 3);
+
+        for(let i = 0; i < particlesCount * 3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 100; 
+        }
+
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        
+        // Procedural texture for particles
+        function getTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 32;
+            canvas.height = 32;
+            const context = canvas.getContext('2d');
+            const gradient = context.createRadialGradient(16, 16, 0, 16, 16, 16);
+            gradient.addColorStop(0, 'rgba(255,255,255,1)');
+            gradient.addColorStop(1, 'rgba(255,255,255,0)');
+            context.fillStyle = gradient;
+            context.fillRect(0, 0, 32, 32);
+            const texture = new THREE.Texture(canvas);
+            texture.needsUpdate = true;
+            return texture;
+        }
+
+        const particlesMaterial = new THREE.PointsMaterial({
+            size: 0.2,
+            map: getTexture(),
+            transparent: true,
+            color: 0xffffff,
+            blending: THREE.AdditiveBlending
+        });
+
+        const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particlesMesh);
+
+        // 4. Floating Ring
+        const torusGeo = new THREE.TorusGeometry(18, 0.2, 16, 100);
+        const torusMat = new THREE.MeshBasicMaterial({ color: 0x444444, transparent: true, opacity: 0.3 });
+        const torus = new THREE.Mesh(torusGeo, torusMat);
+        torus.rotation.x = Math.PI / 2;
+        scene.add(torus);
+
+        // --- POSITIONING ---
+        camera.position.z = 30;
+        
+        // Adjust for initial load
+        function updateLayout() {
+            if (window.innerWidth > 1024) {
+                sphere.position.x = 12;
+                core.position.x = 12;
+                camera.position.z = 30;
+            } else {
+                sphere.position.x = 0;
+                sphere.position.y = -5;
+                core.position.x = 0;
+                core.position.y = -5;
+                camera.position.z = 40;
+            }
+        }
+        updateLayout();
+
+        // --- INTERACTIVITY ---
+        let mouseX = 0;
+        let mouseY = 0;
+        let targetX = 0;
+        let targetY = 0;
+
+        const windowHalfX = window.innerWidth / 2;
+        const windowHalfY = window.innerHeight / 2;
+
+        document.addEventListener('mousemove', (event) => {
+            mouseX = (event.clientX - windowHalfX);
+            mouseY = (event.clientY - windowHalfY);
+        });
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            updateLayout();
+        });
+
+        // --- ANIMATION LOOP ---
+        const clock = new THREE.Clock();
+
+        const animate = () => {
+            targetX = mouseX * 0.001;
+            targetY = mouseY * 0.001;
+
+            const elapsedTime = clock.getElapsedTime();
+
+            // Rotate sphere
+            sphere.rotation.y += 0.002;
+            sphere.rotation.x += 0.001;
+            
+            // Mouse influence
+            sphere.rotation.y += 0.05 * (targetX - sphere.rotation.y);
+            sphere.rotation.x += 0.05 * (targetY - sphere.rotation.x);
+
+            // Core Animation
+            core.rotation.y -= 0.01;
+            core.rotation.z += 0.005;
+            
+            // Pulse effect
+            const scale = 1 + Math.sin(elapsedTime * 2) * 0.1;
+            core.scale.set(scale, scale, scale);
+
+            // Particles flow
+            particlesMesh.rotation.y = -elapsedTime * 0.05;
+            particlesMesh.rotation.x = mouseY * 0.0001;
+
+            // Torus gentle wobble
+            torus.rotation.x = (Math.PI / 2) + Math.sin(elapsedTime * 0.5) * 0.1;
+            torus.rotation.y = Math.cos(elapsedTime * 0.5) * 0.1;
+
+            renderer.render(scene, camera);
+            requestAnimationFrame(animate);
+        };
+
+        animate();
+    </script>
+</body>
+</html>
